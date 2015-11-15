@@ -40,7 +40,7 @@ unsigned long long getTimeNowUs() {
    return timevalToUll(timeNow);
 }
 
-void *sleepLoop() {
+void* sleepLoop() {
    unsigned long long increment = 1000000;
    unsigned long long uStartTime = getTimeNowUs();
    unsigned long long uTimeNow;
@@ -76,6 +76,8 @@ void *sleepLoop() {
          }
       }
    }
+   
+   return NULL;
 }
 
 void turnOnLineBuffering() {
@@ -129,4 +131,6 @@ int main() {
    pthread_join(printThread, NULL);
 
    turnOnLineBuffering();
+   
+   return EXIT_SUCCESS;
 }
