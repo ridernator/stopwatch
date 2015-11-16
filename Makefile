@@ -1,7 +1,16 @@
-stopwatch : src/stopwatch.c
-	@$(CC) -o stopwatch -Wall -Wextra -Werror src/stopwatch.c -pthread
+BIN_NAME = stopwatch
+BIN_INSTALL_FOLDER = /usr/bin
+
+$(BIN_NAME) : src/stopwatch.c
+	@$(CC) -o $(BIN_NAME) -Wall -Wextra -Werror src/stopwatch.c -pthread
+
+all : $(BIN_NAME)
 
 clean :
-	@$(RM) stopwatch
+	@$(RM) $(BIN_NAME)
 
-all : stopwatch
+install : $(BIN_NAME)
+	@cp -f $(BIN_NAME) $(BIN_INSTALL_FOLDER)/
+
+uninstall : 
+	@$(RM) $(BIN_INSTALL_FOLDER)/$(BIN_NAME)
