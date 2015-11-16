@@ -30,3 +30,5 @@ Where : -p interval : The interval in ms to print out elapsed time.
 ```
 ##Installation Instructions :##
 Run `make install` as root
+##Uninstallation Instructions :##
+Run `make uninstall` as root
