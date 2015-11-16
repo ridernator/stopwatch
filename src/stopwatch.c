@@ -6,23 +6,28 @@
 #include <pthread.h>
 #include <sys/time.h>
 
+#define LAP_SIGNAL  SIGUSR1
+#define STOP_SIGNAL SIGUSR2
+
+#define LAP_CHAR  ' '
+#define STOP_CHAR '\n'
+
 // Flags to tell the sleepLoop which "button" has been pressed
 int lapPressed = 0;
 int stopPressed = 0;
 
 /**
  * Signal handler for signals passed to us by the other thread
- * SIGUSR1 maps to the "lap" button on SIGUSR2 maps to the "stop" button
  */
 void sleepLoopSignalHandler(const int signalNumber) {
    switch (signalNumber) {
-      case SIGUSR1 : {
+      case LAP_SIGNAL : {
          lapPressed = 1;
 
          break;
       }
 
-      case SIGUSR2 : {
+      case STOP_SIGNAL : {
          stopPressed = 1;
 
          break;
@@ -85,8 +90,8 @@ void* sleepLoop() {
    unsigned long long uTimeNext = uStartTime + increment;
 
    // Register signal handlers
-   signal(SIGUSR1, sleepLoopSignalHandler);
-   signal(SIGUSR2, sleepLoopSignalHandler);
+   signal(LAP_SIGNAL, sleepLoopSignalHandler);
+   signal(STOP_SIGNAL, sleepLoopSignalHandler);
 
    // For ever
    while (1) {
@@ -96,7 +101,7 @@ void* sleepLoop() {
       if (usleep(uTimeNext - uTimeNow) == 0) {
          // If no signal caught then print out elapsed time
          uTimeNow = getTimeNowUs();
-         fprintf(stdout, "Time Elapsed : %0.3fs\r", (uTimeNow - uStartTime) / 1000000.0);
+         fprintf(stdout, "\rTime Elapsed : %0.3fs", (uTimeNow - uStartTime) / 1000000.0);
          fflush(stdout);
 
          uTimeNext += increment;
@@ -104,7 +109,7 @@ void* sleepLoop() {
          if (lapPressed == 1) {
             // If the lap button has been pressed
             uTimeNow = getTimeNowUs();
-            fprintf(stdout, "Lap Time : %0.3f, Split Time : %0.3fs\n", (uTimeNow - uLastLapTime) / 1000000.0, (uTimeNow - uStartTime) / 1000000.0);
+            fprintf(stdout, "\rLap Time : %0.3f, Split Time : %0.3fs\n", (uTimeNow - uLastLapTime) / 1000000.0, (uTimeNow - uStartTime) / 1000000.0);
             fflush(stdout);
 
             // Reset lap time
@@ -113,7 +118,7 @@ void* sleepLoop() {
          } else if (stopPressed == 1) {
             // If the stop button has been pressed
             uTimeNow = getTimeNowUs();
-            fprintf(stdout, "Total Time Elapsed : %0.3fs\n", (uTimeNow - uStartTime)/1000000.0);
+            fprintf(stdout, "\rTotal Time Elapsed : %0.3fs\n", (uTimeNow - uStartTime) / 1000000.0);
             fflush(stdout);
 
             // Exit loop as we have been told to stop
@@ -129,7 +134,7 @@ void* sleepLoop() {
  * Main function
  */
 int main() {
-   int shouldExit = 1;
+   int shouldExit = 0;
    pthread_t printThread;
 
    // Turn off line buffering so we can listen for single characters from the user
@@ -138,30 +143,34 @@ int main() {
    // Create thread which sleeps and waits for our signals
    if(pthread_create(&printThread, NULL, sleepLoop, NULL)) {
       fprintf(stderr, "Error creating thread\n");
+
       exit(EXIT_FAILURE);
    }
 
    // Loop until told to stop, waiting for input from the user
-   while (shouldExit) {
+   while (!shouldExit) {
       switch (getchar()) {
-         // Space means "lap"
-         case ' ' : {
-            pthread_kill(printThread, SIGUSR1);
+         case LAP_CHAR : {
+            // Send the relevant signal to the other thread
+            pthread_kill(printThread, LAP_SIGNAL);
 
             break;
          }
 
          // Enter means "stop"
-         case '\n' : {
-            pthread_kill(printThread, SIGUSR2);
-            shouldExit = 0;
+         case STOP_CHAR : {
+            // Send the relevant signal to the other thread
+            pthread_kill(printThread, STOP_SIGNAL);
+            shouldExit = 1;
 
             break;
          }
 
-         // Ignore everythign else
+         // Ignore everything else
          default : {
-            // meh
+            // Ignore
+            
+            break;
          }
       }
    }
