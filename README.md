@@ -1,10 +1,10 @@
 # stopwatch
 Command line stopwatch written in C with split / lap support
-
 ##Usage :##
 Run stopwatch :
 ```
 [root@alfie trunk]# stopwatch
+Time Elapsed : 2.700s
 ```
 Press spacebar to get a lap times :
 ```
