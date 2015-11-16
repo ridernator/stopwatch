@@ -3,21 +3,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
-#include <pthread.h>
-#include <limits.h>
 #include <errno.h>
+#include <pthread.h>
 #include <sys/time.h>
 
+// The current version of this app
 #define STOPWATCH_VERSION "1.1.0"
 
+// Signals we send around
 #define LAP_SIGNAL  SIGUSR1
 #define STOP_SIGNAL SIGUSR2
 
+// Our commands
 #define LAP_CHAR  ' '
 #define STOP_CHAR '\n'
 
+// Default print interval
 #define DEFAULT_INTERVAL_US 100000
 
+// Conversion factors
 #define US_PER_MS 1000llu
 #define US_PER_S  1000000.0
 
