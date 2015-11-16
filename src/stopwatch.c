@@ -16,7 +16,7 @@
 #define LAP_CHAR  ' '
 #define STOP_CHAR '\n'
 
-#define DEFAULT_INTERVAL_US 1000000
+#define DEFAULT_INTERVAL_US 100000
 
 #define US_PER_MS 1000llu
 #define US_PER_S  1000000.0
