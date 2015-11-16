@@ -21,4 +21,4 @@ Lap Time : 4.968, Split Time : 8.654s
 Total Time Elapsed : 12.502s
 ```
 ##Installation Instructions :##
-Run make to build the stopwatch binary. There will be a `make install` and perhaps even a `make rpm` option in the future
+Run `make install` as root
