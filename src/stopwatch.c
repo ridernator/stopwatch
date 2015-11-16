@@ -4,13 +4,22 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <pthread.h>
+#include <limits.h>
+#include <errno.h>
 #include <sys/time.h>
+
+#define STOPWATCH_VERSION "1.1.0"
 
 #define LAP_SIGNAL  SIGUSR1
 #define STOP_SIGNAL SIGUSR2
 
 #define LAP_CHAR  ' '
 #define STOP_CHAR '\n'
+
+#define DEFAULT_INTERVAL_US 1000000
+
+#define US_PER_MS 1000llu
+#define US_PER_S  1000000.0
 
 // Flags to tell the sleepLoop which "button" has been pressed
 int lapPressed = 0;
@@ -58,7 +67,7 @@ unsigned long long getTimeNowUs() {
 
 /**
  * Turn line buffering back on
- */ 
+ */
 void turnOnLineBuffering() {
    struct termios termiosStruct;
 
@@ -82,8 +91,8 @@ void turnOffLineBuffering() {
  * This function runs in its own thread and periodically prints out the elapsed time.
  * It waits for signals sent to it from its parent thread to tell it what to do
  */
-void* sleepLoop() {
-   unsigned long long increment = 1000000;
+void* sleepLoop(void* interval) {
+   unsigned long long increment = *((unsigned long long*)interval);
    unsigned long long uStartTime = getTimeNowUs();
    unsigned long long uTimeNow;
    unsigned long long uLastLapTime = uStartTime;
@@ -101,7 +110,7 @@ void* sleepLoop() {
       if (usleep(uTimeNext - uTimeNow) == 0) {
          // If no signal caught then print out elapsed time
          uTimeNow = getTimeNowUs();
-         fprintf(stdout, "\rTime Elapsed : %0.3fs", (uTimeNow - uStartTime) / 1000000.0);
+         fprintf(stdout, "\rTime Elapsed : %0.3fs", (uTimeNow - uStartTime) / US_PER_S);
          fflush(stdout);
 
          uTimeNext += increment;
@@ -109,7 +118,7 @@ void* sleepLoop() {
          if (lapPressed == 1) {
             // If the lap button has been pressed
             uTimeNow = getTimeNowUs();
-            fprintf(stdout, "\rLap Time : %0.3f, Split Time : %0.3fs\n", (uTimeNow - uLastLapTime) / 1000000.0, (uTimeNow - uStartTime) / 1000000.0);
+            fprintf(stdout, "\rLap Time : %0.3f, Split Time : %0.3fs\n", (uTimeNow - uLastLapTime) / US_PER_S, (uTimeNow - uStartTime) / US_PER_S);
             fflush(stdout);
 
             // Reset lap time
@@ -118,7 +127,7 @@ void* sleepLoop() {
          } else if (stopPressed == 1) {
             // If the stop button has been pressed
             uTimeNow = getTimeNowUs();
-            fprintf(stdout, "\rTotal Time Elapsed : %0.3fs\n", (uTimeNow - uStartTime) / 1000000.0);
+            fprintf(stdout, "\rTotal Time Elapsed : %0.3fs\n", (uTimeNow - uStartTime) / US_PER_S);
             fflush(stdout);
 
             // Exit loop as we have been told to stop
@@ -126,22 +135,68 @@ void* sleepLoop() {
          }
       }
    }
-   
+
    return NULL;
 }
 
 /**
  * Main function
  */
-int main() {
+int main(const int argc, char * const* argv) {
+   int arg;
+   unsigned long long interval = DEFAULT_INTERVAL_US;
    int shouldExit = 0;
    pthread_t printThread;
+
+   // Parse command line arguments
+   while ((arg = getopt(argc, argv, "vhp:")) != -1) {
+      switch (arg) {
+         // Print out version information
+         case 'v' : {
+            fprintf(stdout, "stopwatch(%s) by Ciaron Rider(ciaron.rider+github@gmail.com)\n", STOPWATCH_VERSION);
+
+            exit(EXIT_SUCCESS);
+
+            break;
+         }
+
+         // Print out command line options
+         case 'h' : {
+            fprintf(stdout, "Usage : stopwatch [ -vh ] [ -p interval ]\n");
+            fprintf(stdout, "Where : -p interval : The interval in ms to print out elapsed time.\n");
+            fprintf(stdout, "        -v          : Print out version information.\n");
+            fprintf(stdout, "        -h          : Print out this message.\n");
+
+            exit(EXIT_SUCCESS);
+
+            break;
+         }
+
+         // Set the print interval
+         case 'p' : {
+            interval = strtoul(optarg, NULL, 10) * US_PER_MS;
+
+            if ((interval == 0) || (errno != 0)) {
+               fprintf(stderr, "Error converting \"%s\" to an interval value. Using default of %llu\n", optarg, DEFAULT_INTERVAL_US / US_PER_MS);
+               interval = DEFAULT_INTERVAL_US;
+            }
+
+            break;
+         }
+
+         default: {
+            exit(EXIT_FAILURE);
+
+            break;
+         }
+      }
+   }
 
    // Turn off line buffering so we can listen for single characters from the user
    turnOffLineBuffering();
 
    // Create thread which sleeps and waits for our signals
-   if(pthread_create(&printThread, NULL, sleepLoop, NULL)) {
+   if(pthread_create(&printThread, NULL, sleepLoop, &interval)) {
       fprintf(stderr, "Error creating thread\n");
 
       exit(EXIT_FAILURE);
@@ -168,8 +223,6 @@ int main() {
 
          // Ignore everything else
          default : {
-            // Ignore
-            
             break;
          }
       }
@@ -180,6 +233,6 @@ int main() {
 
    // Reset line buffering
    turnOnLineBuffering();
-   
+
    return EXIT_SUCCESS;
 }
