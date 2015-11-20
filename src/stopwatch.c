@@ -8,7 +8,7 @@
 #include <sys/time.h>
 
 // The current version of this app
-#define STOPWATCH_VERSION "1.1.0"
+#define STOPWATCH_VERSION "1.1.1"
 
 // Signals we send around
 #define LAP_SIGNAL  SIGUSR1
