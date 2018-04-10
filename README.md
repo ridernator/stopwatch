@@ -1,6 +1,6 @@
 # stopwatch
 Command line stopwatch written in C with split / lap support
-##Usage :
+## Usage :
 Run stopwatch :
 ```
 [root@alfie trunk]# stopwatch
@@ -28,7 +28,7 @@ Where : -p interval : The interval in ms to print out elapsed time.
         -v          : Print out version information.
         -h          : Print out this message.
 ```
-##Installation Instructions :
+## Installation Instructions :
 Run `make install` as root
-##Uninstallation Instructions :
+## Uninstallation Instructions :
 Run `make uninstall` as root
