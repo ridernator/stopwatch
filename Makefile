@@ -1,5 +1,5 @@
 BIN_NAME = stopwatch
-BIN_INSTALL_FOLDER = /usr/bin
+BIN_INSTALL_FOLDER = /usr/local/bin
 CFLAGS = -Wall -Wextra -Werror -pthread
 
 $(BIN_NAME) : src/stopwatch.c
