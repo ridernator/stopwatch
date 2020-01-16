@@ -24,8 +24,8 @@ Command line stopwatch written in C with split / lap support
 
 %install
 make
-install --directory $RPM_BUILD_ROOT/usr/bin
-install -m 555 stopwatch $RPM_BUILD_ROOT/usr/bin
+install --directory $RPM_BUILD_ROOT/usr/local/bin
+install -m 555 stopwatch $RPM_BUILD_ROOT/usr/local/bin
 
 %files
 /usr/bin/stopwatch
